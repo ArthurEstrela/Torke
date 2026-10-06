@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: torke
+      POSTGRES_USER: torke
+      POSTGRES_PASSWORD: torke_local
+    ports:
+      - "5432:5432"
+    volumes:
+      - torke_postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U torke -d torke"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/torke
+      DB_USERNAME: torke
+      DB_PASSWORD: torke_local
+      JWT_SECRET: local-development-secret-change-me-with-at-least-32-characters
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  torke_postgres:
